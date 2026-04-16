@@ -30,6 +30,11 @@ import time
 import urllib.parse
 from pathlib import Path
 
+# Fix Windows console encoding
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
 # Browser detection
 PLAYWRIGHT_AVAILABLE = False
 try:
@@ -41,9 +46,10 @@ except ImportError:
 # Find system Chrome/Chromium
 CHROME_PATHS = [
     # Windows
+    os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
     r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
     # macOS
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
