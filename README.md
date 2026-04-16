@@ -14,8 +14,10 @@
 - **🤖 SPA-friendly** — Uses Playwright to execute JS, capturing fully-rendered content
 - **🔄 URL rewriting** — Automatically rewrites links in HTML/CSS to work offline
 - **📊 Clone report** — Generates structured JSON report of all captured resources
-- ** Refactoring workflow** — Step-by-step guide to rebuild cloned sites into clean code
-- ** AI Agent ready** — SKILL.md format for direct installation by AI agents
+- **🔗 Multi-page support** — BFS-based recursive page discovery and cloning
+- **📦 CDN handling** — Option to download or skip CDN resources
+- **📜 Lazy-load support** — Auto-scrolls pages to trigger lazy-loaded content
+- **🤖 AI Agent ready** — SKILL.md format for direct installation by AI agents
 
 ---
 
@@ -48,11 +50,14 @@ python scripts/clone.py https://example.com --output ./my-clone
 # Wait longer for lazy-loaded content
 python scripts/clone.py https://example.com --wait 5000
 
-# Recursive: discover and download linked pages
+# Recursive: discover and download linked pages (BFS)
 python scripts/clone.py https://example.com --depth 2
 
 # Debug: see the browser window
 python scripts/clone.py https://example.com --headful
+
+# Include CDN resources (fonts, libs, etc.)
+python scripts/clone.py https://example.com --download-cdn
 ```
 
 ### Serve Locally
@@ -76,6 +81,7 @@ This skill implements a **3-step workflow** optimized for AI agents:
 │ • Playwright │    │ • Tech stack │    │ • Clean code │
 │ • All assets │    │ • Structure  │    │ • Fix paths  │
 │ • URL rewrite│    │ • Missing    │    │ • Rebuild    │
+│ • BFS crawl  │    │ • CDN report │    │              │
 └──────────────┘    └──────────────┘    └──────────────┘
 ```
 
@@ -143,7 +149,18 @@ Options:
   -w, --wait MS           Extra wait time after load in ms (default: 3000)
   -f, --full              Full recursive clone (sets depth=2)
   --headful               Run browser in visible mode
+  --download-cdn          Also download CDN resources
   -h, --help              Show help
+```
+
+### path_rewriter.py
+
+```
+Usage: python scripts/path_rewriter.py <directory> <base-url>
+
+Options:
+  --cdn-dir DIR           Directory name for CDN resources (default: _cdn)
+  --keep-cdn              Keep CDN URLs as-is
 ```
 
 ### Output
@@ -157,6 +174,7 @@ cloned_example.com/
 │   ├── js/
 │   └── images/
 ├── fonts/
+├── _cdn/                   # CDN resources (if --download-cdn)
 └── _clone_report.json      # Structured clone metadata
 ```
 
@@ -195,7 +213,7 @@ When using with LLM agents:
 
 ---
 
-##  Browser Detection
+## 🌐 Browser Detection
 
 The script **auto-detects** an available browser (no config needed):
 
@@ -207,15 +225,21 @@ The script **auto-detects** an available browser (no config needed):
 
 **Most users have Chrome or Edge installed — no extra download needed!**
 
+Supports Windows, macOS, Linux, and WSL2.
+
+---
+
 ## 🐛 Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
 | `No browser found` | Install Chrome or Edge, or run `python -m playwright install chromium` |
 | Page is blank after download | Site needs JS — `clone.py` handles this automatically |
-| Images broken | Increase `--wait` time for lazy-loaded images |
+| Images broken | Increase `--wait` time for lazy-loaded images, or use `--download-cdn` |
 | CSS minified | Refactoring step rebuilds styles from scratch |
 | API calls return 404 | Expected — use mock data in refactored version |
+| Multi-page clone seems stuck | Use `--depth 1` to limit recursion |
+| Fonts not loading | Use `--download-cdn` to capture Google Fonts and other CDN fonts |
 
 ---
 
@@ -238,8 +262,8 @@ Inspired by and built upon:
 
 Contributions welcome! Areas for improvement:
 
-- [ ] Better CSS URL rewriting for complex cases
 - [ ] Support for service workers / PWA resources
 - [ ] Automatic framework detection from downloaded files
 - [ ] Built-in refactoring templates
-- [ ] Multi-page recursive download with queue management
+- [ ] Rate limiting for respectful crawling
+- [ ] Cookie/session preservation for authenticated pages

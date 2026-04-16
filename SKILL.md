@@ -6,7 +6,7 @@ description: >
   Supports both static sites (via wget/httrack) and SPA/JS-rendered sites (via Playwright).
   Workflow: 1) Download assets → 2) Analyze → 3) Refactor → 4) Fix missing parts.
 user-invocable: true
-argument-hint: "<url> [options: --output <dir>]"
+argument-hint: "<url> [options: --output <dir> --depth <n> --download-cdn]"
 ---
 
 # Website Clone Skill
@@ -65,6 +65,8 @@ python scripts/clone.py <url> [--output <dir>]
 3. Intercepts ALL network requests (HTML, CSS, JS, images, fonts, XHR)
 4. Saves everything to `output/` with original directory structure
 5. Rewrites URLs in HTML/CSS to point to local files
+6. Scrolls page to trigger lazy-loaded content
+7. Optionally discovers and downloads linked pages (--depth)
 
 **Example:**
 ```bash
@@ -94,7 +96,7 @@ httrack <url> -O <output-dir> -%v --depth=5
 After download, the agent reads the downloaded files to identify:
 
 1. **Tech Stack** — Framework (React/Vue/Next.js/Nuxt.js), bundler (webpack/vite), CSS framework (Tailwind/Bootstrap)
-2. **Structure** — Component files, page files, asset directories
+2. **Structure** — Component files, page directories, asset directories
 3. **Third-party libs** — GSAP, Locomotive Scroll, Framer Motion, etc.
 4. **Build artifacts** — Minified JS/CSS that needs cleanup
 5. **Missing resources** — CDN-loaded assets that weren't captured
@@ -137,8 +139,9 @@ Options:
   --output <dir>   Output directory (default: ./cloned_<hostname>)
   --depth <n>      Max click depth for recursive pages (default: 0 = single page only)
   --wait <ms>      Extra wait time after page load in ms (default: 3000)
-  --full           Download all linked pages recursively (uses wget internally)
+  --full           Download all linked pages recursively (uses BFS, depth=2)
   --headful        Run browser in visible mode (for debugging)
+  --download-cdn   Also download CDN resources (fonts, libs, etc.)
 ```
 
 **Example usage:**
@@ -152,19 +155,27 @@ python scripts/clone.py https://example.com --output ./my-clone
 # Wait longer for slow sites
 python scripts/clone.py https://example.com --wait 5000
 
-# Recursive clone (download linked pages too)
+# Recursive clone (download linked pages too, BFS traversal)
 python scripts/clone.py https://example.com --depth 2
+
+# Include CDN resources
+python scripts/clone.py https://example.com --download-cdn
 ```
 
 ### scripts/path_rewriter.py — Path rewriting utility
 
-Used internally by clone.py. Rewrites URLs in HTML/CSS to point to local files.
+Standalone tool to rewrite URLs in existing cloned files.
 
 ```
 Usage: python scripts/path_rewriter.py <directory> <base-url>
 
+Options:
+  --cdn-dir <dir>  Directory name for CDN resources (default: _cdn)
+  --keep-cdn       Keep CDN URLs as-is instead of rewriting
+
 Example:
 python scripts/path_rewriter.py ./cloned-site https://example.com
+python scripts/path_rewriter.py ./cloned-site https://example.com --keep-cdn
 ```
 
 ## Output Structure
@@ -187,6 +198,9 @@ cloned_example.com/
 │       └── logo.svg
 ├── fonts/
 │   └── inter-var.woff2
+├── _cdn/                   # CDN resources (if --download-cdn)
+│   ├── fonts_googleapis_com/
+│   └── cdn_jsdelivr_net/
 └── _clone_report.json      # Metadata about the clone
 ```
 
@@ -198,7 +212,7 @@ cloned_example.com/
 
 ### Issue: Images are broken
 **Cause:** Images loaded from CDN or lazy-loaded after scroll.
-**Solution:** Increase `--wait` time, or manually download missing images.
+**Solution:** Increase `--wait` time, or use `--download-cdn` to include CDN resources.
 
 ### Issue: CSS is minified and unreadable
 **Cause:** Production build output.
@@ -206,11 +220,15 @@ cloned_example.com/
 
 ### Issue: Fonts not loading
 **Cause:** Google Fonts or self-hosted fonts not captured.
-**Solution:** Check `_clone_report.json` for missing font URLs, download manually.
+**Solution:** Check `_clone_report.json` for missing font URLs, use `--download-cdn` flag, or download manually.
 
 ### Issue: API calls return 404
 **Cause:** Dynamic data from backend API.
 **Solution:** This is expected — API responses can't be cloned. Use mock data in the refactored version.
+
+### Issue: Multi-page clone seems stuck
+**Cause:** Site has many internal links.
+**Solution:** Use `--depth 1` instead of `--full` to limit recursion. The script uses BFS so it won't infinite-loop.
 
 ## Best Practices
 
@@ -219,6 +237,7 @@ cloned_example.com/
 3. **Start with single page** — Test with one page before doing full recursive clone
 4. **Refactor incrementally** — Build section by section, verify each step
 5. **Preserve animations** — Note which animation libraries are used before rebuilding
+6. **Use --download-cdn sparingly** — Only when you need specific CDN fonts/libs locally
 
 ## Token Optimization Tips
 
