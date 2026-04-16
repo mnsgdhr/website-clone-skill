@@ -25,12 +25,15 @@
 
 ```bash
 # Clone this repo
-git clone https://github.com/<your-username>/website-clone-skill.git
+git clone https://github.com/mnsgdhr/website-clone-skill.git
 cd website-clone-skill
 
 # Install dependencies
 pip install -r requirements.txt
-playwright install chromium
+
+# Browser: auto-detected!
+#   1. System Chrome/Edge (if installed) — no extra setup needed
+#   2. Playwright Chromium (fallback): python -m playwright install chromium
 ```
 
 ### Clone a Website
@@ -192,16 +195,27 @@ When using with LLM agents:
 
 ---
 
+##  Browser Detection
+
+The script **auto-detects** an available browser (no config needed):
+
+| Priority | Browser | Notes |
+|----------|---------|-------|
+| 1 | **System Chrome** | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
+| 2 | **System Edge** | `C:\Program Files\Microsoft\Edge\Application\msedge.exe` |
+| 3 | **Playwright Chromium** | Fallback if system browser not found |
+
+**Most users have Chrome or Edge installed — no extra download needed!**
+
 ## 🐛 Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| `ModuleNotFoundError: playwright` | Run `pip install playwright && playwright install chromium` |
-| Page is blank after download | Site needs JS — use `clone.py` (Playwright), not wget |
+| `No browser found` | Install Chrome or Edge, or run `python -m playwright install chromium` |
+| Page is blank after download | Site needs JS — `clone.py` handles this automatically |
 | Images broken | Increase `--wait` time for lazy-loaded images |
-| CSS minified | Refactoring step will rebuild styles from scratch |
+| CSS minified | Refactoring step rebuilds styles from scratch |
 | API calls return 404 | Expected — use mock data in refactored version |
-| Browser fails to launch | Check Chrome/Chromium is installed: `playwright install chromium` |
 
 ---
 

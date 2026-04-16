@@ -25,25 +25,21 @@ Step 3: Refactor    →  Rebuild into clean code, fix missing parts
 
 ## Prerequisites
 
-**Required tools** (check before proceeding):
+**Required tools:**
 
 | Tool | Purpose | Install |
 |------|---------|---------|
 | **Python 3.8+** | Run download scripts | `python --version` |
-| **Playwright** | JS-rendered site download | `pip install playwright && playwright install chromium` |
-| **wget** (optional) | Static site download | Built-in on Linux/macOS, `choco install wget` on Windows |
+| **Browser** | Chrome, Edge, or Playwright Chromium | See below |
+| **wget** (optional) | Static site download | Built-in on Linux/macOS |
 | **httrack** (optional) | Static site download (advanced) | `choco install httrack` |
 
-**Check Playwright availability:**
-```bash
-python -c "from playwright.sync_api import sync_playwright; print('OK')"
-```
+**Browser auto-detection** (in order):
+1. **System Chrome** — if installed, used automatically (most common)
+2. **System Edge** — fallback if Chrome not found
+3. **Playwright Chromium** — `pip install playwright && python -m playwright install chromium`
 
-If Playwright is not installed, run:
-```bash
-pip install playwright
-playwright install chromium
-```
+> **Most users already have Chrome or Edge — no extra setup needed!**
 
 ## Workflow
 
@@ -196,9 +192,9 @@ cloned_example.com/
 
 ## Common Issues & Solutions
 
-### Issue: Page is blank after download
-**Cause:** The site is a SPA that needs JS to render.
-**Solution:** Use the Playwright script (Option A) instead of wget.
+### Issue: "No browser found" error
+**Cause:** No Chrome, Edge, or Playwright Chromium detected.
+**Solution:** Install Google Chrome or Microsoft Edge. Or run `pip install playwright && python -m playwright install chromium`.
 
 ### Issue: Images are broken
 **Cause:** Images loaded from CDN or lazy-loaded after scroll.
