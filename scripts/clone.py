@@ -32,6 +32,12 @@ import urllib.parse
 from collections import deque
 from pathlib import Path
 
+# Python version check
+if sys.version_info < (3, 9):
+    print("⚠️ Warning: Python 3.9+ is recommended for this script.")
+elif sys.version_info >= (3, 14):
+    print("⚠️ Warning: Python 3.14+ may have compatibility issues with Playwright. Consider using Python 3.9–3.13.")
+
 # Fix Windows console encoding
 if sys.platform == 'win32':
     import io

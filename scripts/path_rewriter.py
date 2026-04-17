@@ -21,6 +21,12 @@ import sys
 import urllib.parse
 from pathlib import Path
 
+# Python version check
+if sys.version_info < (3, 9):
+    print("⚠️ Warning: Python 3.9+ is recommended for this script.")
+elif sys.version_info >= (3, 14):
+    print("⚠️ Warning: Python 3.14+ may have compatibility issues with some dependencies.")
+
 
 # Common CDN domains
 CDN_DOMAINS = {

@@ -3,7 +3,7 @@
 > Download any website's complete source code, analyze it, and refactor into a clean project. Built for AI agents.
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://python.org)
 [![Playwright](https://img.shields.io/badge/Powered%20by-Playwright-green.svg)](https://playwright.dev)
 
 ---
@@ -30,7 +30,7 @@
 git clone https://github.com/mnsgdhr/website-clone-skill.git
 cd website-clone-skill
 
-# Install dependencies
+# Install dependencies (Use Python 3.9–3.13)
 pip install -r requirements.txt
 
 # Browser: auto-detected!
@@ -234,6 +234,7 @@ Supports Windows, macOS, Linux, and WSL2.
 | Problem | Solution |
 |---------|----------|
 | `No browser found` | Install Chrome or Edge, or run `python -m playwright install chromium` |
+| `Playwright errors on Python 3.14+` | Downgrade to Python 3.13 or earlier for stable Playwright support |
 | Page is blank after download | Site needs JS — `clone.py` handles this automatically |
 | Images broken | Increase `--wait` time for lazy-loaded images, or use `--download-cdn` |
 | CSS minified | Refactoring step rebuilds styles from scratch |

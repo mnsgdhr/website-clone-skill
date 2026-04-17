@@ -29,7 +29,7 @@ Step 3: Refactor    →  Rebuild into clean code, fix missing parts
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| **Python 3.8+** | Run download scripts | `python --version` |
+| **Python 3.9+** | Run download scripts | `python --version` |
 | **Browser** | Chrome, Edge, or Playwright Chromium | See below |
 | **wget** (optional) | Static site download | Built-in on Linux/macOS |
 | **httrack** (optional) | Static site download (advanced) | `choco install httrack` |
@@ -208,7 +208,7 @@ cloned_example.com/
 
 ### Issue: "No browser found" error
 **Cause:** No Chrome, Edge, or Playwright Chromium detected.
-**Solution:** Install Google Chrome or Microsoft Edge. Or run `pip install playwright && python -m playwright install chromium`.
+**Solution:** Install Google Chrome or Microsoft Edge. Or run `pip install playwright && python -m playwright install chromium`. Note: Python 3.14+ is not yet fully supported by Playwright; use Python 3.9–3.13 for best results.
 
 ### Issue: Images are broken
 **Cause:** Images loaded from CDN or lazy-loaded after scroll.
@@ -247,3 +247,4 @@ When using this skill with an AI agent:
 2. **Read only what's needed** — Don't read all JS files; grep for framework indicators first
 3. **Use the clone report** — `_clone_report.json` gives you a structured summary without reading hundreds of files
 4. **Refactor from scratch** — For complex sites, it's cheaper to rebuild with clean code than to patch minified output
+5. **Python Version** — Ensure you are using Python 3.9–3.13. Python 3.14+ may have compatibility issues with Playwright dependencies.
