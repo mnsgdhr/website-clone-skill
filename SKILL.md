@@ -41,7 +41,24 @@ Step 3: Refactor    →  Rebuild into clean code, fix missing parts
 
 > **Most users already have Chrome or Edge — no extra setup needed!**
 
-## Workflow
+## Workflow (Enhanced)
+
+### Step 0: Design Token Extraction (NEW!)
+
+Before downloading, extract design tokens for high-fidelity reconstruction:
+
+```bash
+python scripts/extract_tokens.py <url> --output ./tokens
+```
+
+**What it extracts:**
+- Colors (primary, secondary, accent, backgrounds)
+- Typography (fonts, sizes, weights, line-heights)
+- Spacing (margins, paddings, gaps)
+- Border radius & shadows
+- Animation durations & easing
+
+**Output:** `tokens/design-tokens.json`
 
 ### Step 1: Download Assets
 
@@ -128,6 +145,42 @@ Based on the analysis, the agent:
 
 ## Script Reference
 
+### scripts/extract_tokens.py — Design token extraction (NEW!)
+
+```
+Usage: python scripts/extract_tokens.py <url> [options]
+
+Options:
+  --output <dir>    Output directory (default: ./tokens)
+  --wait <ms>       Wait time for render (default: 3000)
+  --fullpage       Extract from full page scroll
+```
+
+### scripts/visual_diff.py — Visual comparison (NEW!)
+
+
+```
+Usage: python scripts/visual_diff.py <original-url> <cloned-dir> [options]
+
+Options:
+  --output <dir>   Output directory (default: ./diff)
+  --breakpoints    Viewports: mobile,tablet,desktop (default: all)
+  --fullpage      Compare full page, not just viewport
+  --threshold    Match threshold % (default: 95)
+```
+
+### scripts/parallel_clone.py — Parallel worktree build (NEW!)
+
+
+```
+Usage: python scripts/parallel_clone.py <url> [options]
+
+Options:
+  --workers <n>    Number of parallel workers (default: 4)
+  --output <dir>   Output directory (default: ./cloned_...)
+  --depth <n>     Recursion depth (default: 2)
+```
+
 ### scripts/clone.py — Main download script
 
 ```
@@ -212,6 +265,40 @@ cloned_example.com/
 **Cause:** Dynamic data from backend API.
 **Solution:** This is expected — API responses can't be cloned. Use mock data in the refactored version.
 
+### Step 4: Visual Diff (NEW!)
+
+After refactoring, verify with visual comparison:
+
+```bash
+python scripts/visual_diff.py <original-url> <cloned-dir> --output ./diff
+```
+
+**What it does:**
+1. Opens original and cloned site side-by-side
+2. Captures screenshots at breakpoints
+3. Generates diff overlay image
+4. Reports pixel match percentage
+
+**Options:**
+- `--breakpoints` — Mobile/tablet/desktop (default: all)
+- `--fullpage` — Capture full page scroll
+
+### Step 5: Parallel Build (NEW!)
+
+For large sites, use worktree parallelization:
+
+```bash
+python scripts/parallel_clone.py <url> --workers 4
+```
+
+**How it works:**
+1. Analyzes site structure & discovers pages
+2. Splits pages into N worktrees (workers)
+3. Runs parallel clone processes
+4. Merges results into unified output
+
+**Speedup:** 2-5x faster on multi-section sites
+
 ## Best Practices
 
 1. **Always use Playwright for modern sites** — wget/httrack miss JS-rendered content
@@ -219,6 +306,8 @@ cloned_example.com/
 3. **Start with single page** — Test with one page before doing full recursive clone
 4. **Refactor incrementally** — Build section by section, verify each step
 5. **Preserve animations** — Note which animation libraries are used before rebuilding
+6. **Extract tokens first** — For high-fidelity clones, run extract_tokens.py before clone.py
+7. **Visual diff for QA** — Always verify with visual_diff.py before delivery
 
 ## Token Optimization Tips
 
