@@ -6,7 +6,7 @@ description: >
   Supports both static sites (via wget/httrack) and SPA/JS-rendered sites (via Playwright).
   Workflow: 1) Download assets → 2) Analyze → 3) Refactor → 4) Fix missing parts.
 user-invocable: true
-argument-hint: "<url> [options: --output <dir>]"
+argument-hint: "<url> [options: --output <dir> --depth <n> --download-cdn]"
 ---
 
 # Website Clone Skill
@@ -29,7 +29,7 @@ Step 3: Refactor    →  Rebuild into clean code, fix missing parts
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| **Python 3.8+** | Run download scripts | `python --version` |
+| **Python 3.9+** | Run download scripts | `python --version` |
 | **Browser** | Chrome, Edge, or Playwright Chromium | See below |
 | **wget** (optional) | Static site download | Built-in on Linux/macOS |
 | **httrack** (optional) | Static site download (advanced) | `choco install httrack` |
@@ -82,6 +82,8 @@ python scripts/clone.py <url> [--output <dir>]
 3. Intercepts ALL network requests (HTML, CSS, JS, images, fonts, XHR)
 4. Saves everything to `output/` with original directory structure
 5. Rewrites URLs in HTML/CSS to point to local files
+6. Scrolls page to trigger lazy-loaded content
+7. Optionally discovers and downloads linked pages (--depth)
 
 **Example:**
 ```bash
@@ -111,7 +113,7 @@ httrack <url> -O <output-dir> -%v --depth=5
 After download, the agent reads the downloaded files to identify:
 
 1. **Tech Stack** — Framework (React/Vue/Next.js/Nuxt.js), bundler (webpack/vite), CSS framework (Tailwind/Bootstrap)
-2. **Structure** — Component files, page files, asset directories
+2. **Structure** — Component files, page directories, asset directories
 3. **Third-party libs** — GSAP, Locomotive Scroll, Framer Motion, etc.
 4. **Build artifacts** — Minified JS/CSS that needs cleanup
 5. **Missing resources** — CDN-loaded assets that weren't captured
@@ -190,8 +192,9 @@ Options:
   --output <dir>   Output directory (default: ./cloned_<hostname>)
   --depth <n>      Max click depth for recursive pages (default: 0 = single page only)
   --wait <ms>      Extra wait time after page load in ms (default: 3000)
-  --full           Download all linked pages recursively (uses wget internally)
+  --full           Download all linked pages recursively (uses BFS, depth=2)
   --headful        Run browser in visible mode (for debugging)
+  --download-cdn   Also download CDN resources (fonts, libs, etc.)
 ```
 
 **Example usage:**
@@ -205,19 +208,27 @@ python scripts/clone.py https://example.com --output ./my-clone
 # Wait longer for slow sites
 python scripts/clone.py https://example.com --wait 5000
 
-# Recursive clone (download linked pages too)
+# Recursive clone (download linked pages too, BFS traversal)
 python scripts/clone.py https://example.com --depth 2
+
+# Include CDN resources
+python scripts/clone.py https://example.com --download-cdn
 ```
 
 ### scripts/path_rewriter.py — Path rewriting utility
 
-Used internally by clone.py. Rewrites URLs in HTML/CSS to point to local files.
+Standalone tool to rewrite URLs in existing cloned files.
 
 ```
 Usage: python scripts/path_rewriter.py <directory> <base-url>
 
+Options:
+  --cdn-dir <dir>  Directory name for CDN resources (default: _cdn)
+  --keep-cdn       Keep CDN URLs as-is instead of rewriting
+
 Example:
 python scripts/path_rewriter.py ./cloned-site https://example.com
+python scripts/path_rewriter.py ./cloned-site https://example.com --keep-cdn
 ```
 
 ## Output Structure
@@ -240,6 +251,9 @@ cloned_example.com/
 │       └── logo.svg
 ├── fonts/
 │   └── inter-var.woff2
+├── _cdn/                   # CDN resources (if --download-cdn)
+│   ├── fonts_googleapis_com/
+│   └── cdn_jsdelivr_net/
 └── _clone_report.json      # Metadata about the clone
 ```
 
@@ -247,11 +261,11 @@ cloned_example.com/
 
 ### Issue: "No browser found" error
 **Cause:** No Chrome, Edge, or Playwright Chromium detected.
-**Solution:** Install Google Chrome or Microsoft Edge. Or run `pip install playwright && python -m playwright install chromium`.
+**Solution:** Install Google Chrome or Microsoft Edge. Or run `pip install playwright && python -m playwright install chromium`. Note: Python 3.14+ is not yet fully supported by Playwright; use Python 3.9–3.13 for best results.
 
 ### Issue: Images are broken
 **Cause:** Images loaded from CDN or lazy-loaded after scroll.
-**Solution:** Increase `--wait` time, or manually download missing images.
+**Solution:** Increase `--wait` time, or use `--download-cdn` to include CDN resources.
 
 ### Issue: CSS is minified and unreadable
 **Cause:** Production build output.
@@ -259,7 +273,7 @@ cloned_example.com/
 
 ### Issue: Fonts not loading
 **Cause:** Google Fonts or self-hosted fonts not captured.
-**Solution:** Check `_clone_report.json` for missing font URLs, download manually.
+**Solution:** Check `_clone_report.json` for missing font URLs, use `--download-cdn` flag, or download manually.
 
 ### Issue: API calls return 404
 **Cause:** Dynamic data from backend API.
@@ -299,6 +313,10 @@ python scripts/parallel_clone.py <url> --workers 4
 
 **Speedup:** 2-5x faster on multi-section sites
 
+### Issue: Multi-page clone seems stuck
+**Cause:** Site has many internal links.
+**Solution:** Use `--depth 1` instead of `--full` to limit recursion. The script uses BFS so it won't infinite-loop.
+
 ## Best Practices
 
 1. **Always use Playwright for modern sites** — wget/httrack miss JS-rendered content
@@ -308,6 +326,7 @@ python scripts/parallel_clone.py <url> --workers 4
 5. **Preserve animations** — Note which animation libraries are used before rebuilding
 6. **Extract tokens first** — For high-fidelity clones, run extract_tokens.py before clone.py
 7. **Visual diff for QA** — Always verify with visual_diff.py before delivery
+8. **Use --download-cdn sparingly** — Only when you need specific CDN fonts/libs locally
 
 ## Token Optimization Tips
 
@@ -317,3 +336,4 @@ When using this skill with an AI agent:
 2. **Read only what's needed** — Don't read all JS files; grep for framework indicators first
 3. **Use the clone report** — `_clone_report.json` gives you a structured summary without reading hundreds of files
 4. **Refactor from scratch** — For complex sites, it's cheaper to rebuild with clean code than to patch minified output
+5. **Python Version** — Ensure you are using Python 3.9–3.13. Python 3.14+ may have compatibility issues with Playwright dependencies.
